@@ -1,7 +1,12 @@
 <resources>
     <string name="app_name">Device Information</string>
+    <string name="main_screen_title">My Device Information</string>
     <string name="ip_default">Disconnected</string>
     <string name="location_default">Location Unavailable</string>
     <string name="datetime_format">Local: %1$s\n(UTC: %2$s)</string>
     <string name="location_format">Lat: %1$.6f\nLong: %2$.6f</string>
+    <string name="download_button_text">Download Device Information</string>
+    <string name="ip_address_card_title">IP Address of the Device</string>
+    <string name="user_location_title">User Location</string>
+    <string name="date_time_title">Date and Time</string>
 </resources>

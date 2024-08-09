@@ -2,4 +2,16 @@
 <resources>
     <dimen name="card_view_margin">8dp</dimen>
     <dimen name="card_view_padding">24dp</dimen>
+    <dimen name="title_padding">30dp</dimen>
+    <dimen name="title_padding_left">10dp</dimen>
+    <dimen name="card_view_corner_radius">14dp</dimen>
+    <dimen name="card_view_elevation">4dp</dimen>
+    <dimen name="download_button_padding">30dp</dimen>
+    <dimen name="download_button_elevation">4dp</dimen>
+    <dimen name="download_button_text_padding">14dp</dimen>
+
+    <!-- Font size -->
+    <dimen name="card_view_title">14sp</dimen>
+    <dimen name="card_view_value">16sp</dimen>
+    <dimen name="main_screen_title_size">24sp</dimen>
 </resources>
