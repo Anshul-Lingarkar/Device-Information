@@ -99,8 +99,12 @@ class MainActivity : AppCompatActivity(), BaseApplicationContract.ViewContract {
     }
 
     private fun showPermissionRequiredMessage() {
-        Toast.makeText(this, getString(R.string.permission_required_message), Toast.LENGTH_LONG)
-            .show()
+        val rootView = findViewById<View>(android.R.id.content)
+        Snackbar.make(
+            rootView,
+            getString(R.string.permission_required_message),
+            Snackbar.LENGTH_SHORT
+        ).show()
     }
 
     override fun onRequestPermissionsResult(
