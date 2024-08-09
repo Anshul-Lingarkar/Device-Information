@@ -21,26 +21,27 @@ import java.util.*
 class NetworkViewModel(application: Application) : AndroidViewModel(application),
     BaseApplicationContract.ViewModelContract {
 
-    private val _networkData = MutableLiveData<NetworkData>()
-    val networkData: LiveData<NetworkData> get() = _networkData
+    private val userNetworkData = MutableLiveData<NetworkData>()
+    val networkData: LiveData<NetworkData> get() = userNetworkData
     private val handler = Handler(Looper.getMainLooper())
-
-    var networkRepository = NetworkRepository(application)
+    private var networkRepository = NetworkRepository(application)
 
     init {
-        val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager =
+            application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val networkRequest = NetworkRequest.Builder().build()
 
-        connectivityManager.registerNetworkCallback(networkRequest, object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: android.net.Network) {
-                updateNetworkData()
-            }
+        connectivityManager.registerNetworkCallback(
+            networkRequest,
+            object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: android.net.Network) {
+                    updateNetworkData()
+                }
 
-            override fun onLost(network: android.net.Network) {
-                updateNetworkData()
-            }
-        })
-
+                override fun onLost(network: android.net.Network) {
+                    updateNetworkData()
+                }
+            })
         updateNetworkData()
         startTimer()
         requestLocationUpdates()
@@ -51,26 +52,29 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
             val ipAddress = getIpAddress()
             val location = networkRepository.getCurrentLocation()
             val localTime = getCurrentTimeInTimeZone(TimeZone.getDefault().id)
-            val utcTime = getCurrentTimeInTimeZone("UTC")
+            val utcTime = getCurrentTimeInTimeZone(UTC_TIME_ZONE)
             val networkData = NetworkData(ipAddress, location, localTime, utcTime)
-            _networkData.postValue(networkData)
-            appendDataToCsv(networkData)  // Append data to CSV when data is updated
+            // Append data to CSV when network data is updated
+            userNetworkData.postValue(networkData)
+            appendDataToCsv(networkData)
         }
     }
 
     override fun requestLocationUpdates() {
         networkRepository.requestLocationUpdates { location ->
-            val currentNetworkData = _networkData.value
+            val currentNetworkData = userNetworkData.value
             val updatedNetworkData = currentNetworkData?.copy(location = location)
+            // Append data to CSV when location is updated
             updatedNetworkData?.let {
-                _networkData.postValue(it)
-                appendDataToCsv(it) // Append data to CSV when location is updated
+                userNetworkData.postValue(it)
+                appendDataToCsv(it)
             }
         }
     }
 
     suspend fun getIpAddress(): String? {
-        val connectivityManager = getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager =
+            getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connectivityManager.activeNetwork
         val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
 
@@ -79,9 +83,11 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
                     networkRepository.getWifiIpAddress()
                 }
+
                 networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
                     networkRepository.getPublicIpAddress()
                 }
+
                 else -> {
                     null
                 }
@@ -92,7 +98,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun getCurrentTimeInTimeZone(timeZoneId: String): String {
-        val sdf = SimpleDateFormat("MM:dd:yyyy HH:mm:ss", Locale.getDefault())
+        val sdf = SimpleDateFormat(TIME_FORMAT, Locale.getDefault())
         sdf.timeZone = TimeZone.getTimeZone(timeZoneId)
         return sdf.format(Date())
     }
@@ -108,17 +114,24 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
 
     private fun updateTime() {
         val localTime = getCurrentTimeInTimeZone(TimeZone.getDefault().id)
-        val utcTime = getCurrentTimeInTimeZone("UTC")
-        val currentNetworkData = _networkData.value
+        val utcTime = getCurrentTimeInTimeZone(UTC_TIME_ZONE)
+        val currentNetworkData = userNetworkData.value
         val updatedNetworkData = currentNetworkData?.copy(localTime = localTime, utcTime = utcTime)
         updatedNetworkData?.let {
-            _networkData.postValue(it)
+            userNetworkData.postValue(it)
         }
     }
 
     private fun appendDataToCsv(networkData: NetworkData) {
-        val data = "${networkData.ipAddress ?: "N/A"},${networkData.location?.latitude ?: "N/A"},${networkData.location?.longitude ?: "N/A"},${networkData.localTime},${networkData.utcTime}"
+        val data =
+            "${networkData.ipAddress ?: "Not Available"},${networkData.location?.latitude ?: "Not Available"},${networkData.location?.longitude ?: "N/A"},${networkData.localTime},${networkData.utcTime}"
         FileUtils.writeDataToCsv(getApplication(), data)
+    }
+
+    companion object {
+        val TIME_FORMAT = "MM:dd:yyyy HH:mm:ss"
+        val UTC_TIME_ZONE = "UTC"
+        val CSV_FILE_NAME = "network_data.csv"
     }
 }
 

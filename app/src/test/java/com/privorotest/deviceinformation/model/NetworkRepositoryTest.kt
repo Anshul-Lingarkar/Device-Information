@@ -26,6 +26,7 @@ class NetworkRepositoryTest {
     private lateinit var context: Context
     private lateinit var locationManager: LocationManager
     private lateinit var repository: NetworkRepository
+
     @Before
     fun setUp() {
         context = mock(Context::class.java)
@@ -166,7 +167,8 @@ class NetworkRepositoryTest {
     @Test
     fun testGetPublicIpAddressException() = runBlockingTest {
         val networkRepository = mock(NetworkRepository(context)::class.java)
-        doThrow(RuntimeException("Failed to fetch IP")).`when`(networkRepository).readTextFromUrl("https://api.ipify.org?format=text")
+        doThrow(RuntimeException("Failed to fetch IP")).`when`(networkRepository)
+            .readTextFromUrl("https://api.ipify.org?format=text")
 
         val result = networkRepository.getPublicIpAddress()
         assertNull(result)
@@ -188,7 +190,9 @@ class NetworkRepositoryTest {
         `when`(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)).thenReturn(true)
         `when`(locationManager.getLastKnownLocation("provider1")).thenReturn(null)
         `when`(locationManager.getLastKnownLocation("provider2")).thenReturn(location2)
-        `when`(ContextCompat.getSystemService(context, LocationManager::class.java)).thenReturn(locationManager)
+        `when`(ContextCompat.getSystemService(context, LocationManager::class.java)).thenReturn(
+            locationManager
+        )
 
         val result = repository.getCurrentLocation()
         result?.latitude?.let { assertEquals(90.12, it, 0.01) }
@@ -201,7 +205,9 @@ class NetworkRepositoryTest {
         `when`(locationManager.getProviders(true)).thenReturn(providers)
         `when`(locationManager.getLastKnownLocation("provider1")).thenReturn(null)
         `when`(locationManager.getLastKnownLocation("provider2")).thenReturn(null)
-        `when`(ContextCompat.getSystemService(context, LocationManager::class.java)).thenReturn(locationManager)
+        `when`(ContextCompat.getSystemService(context, LocationManager::class.java)).thenReturn(
+            locationManager
+        )
 
         val result = repository.getCurrentLocation()
         assertNull(result)
@@ -209,7 +215,10 @@ class NetworkRepositoryTest {
 
     @Test
     fun testReadTextFromUrlMethod() {
-        assertEquals("98.177.81.76", repository.readTextFromUrl("https://api.ipify.org?format=text"))
+        assertEquals(
+            "98.177.81.76",
+            repository.readTextFromUrl("https://api.ipify.org?format=text")
+        )
     }
 
     private fun createInetAddress(hostAddress: String, isLoopback: Boolean): InetAddress {

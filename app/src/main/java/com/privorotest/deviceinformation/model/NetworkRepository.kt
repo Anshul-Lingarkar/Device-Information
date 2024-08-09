@@ -16,13 +16,13 @@ import java.net.NetworkInterface
 import java.net.URL
 import java.util.*
 
-class NetworkRepository(val context: Context): NetworkRepositoryContract {
+class NetworkRepository(val context: Context) : NetworkRepositoryContract {
 
     override fun getWifiIpAddress(): String? {
         try {
             val interfaces: Enumeration<NetworkInterface> = NetworkInterface.getNetworkInterfaces()
             for (intf in interfaces) {
-                if (intf.name.contains("wlan") || intf.name.contains("wifi")) {
+                if (intf.name.contains(NETWORK_TYPE_WLAN) || intf.name.contains(NETWORK_TYPE_WIFI)) {
                     val addresses: Enumeration<InetAddress> = intf.inetAddresses
                     for (addr in addresses) {
                         if (!addr.isLoopbackAddress && addr is Inet4Address) {
@@ -54,13 +54,21 @@ class NetworkRepository(val context: Context): NetworkRepositoryContract {
     }
 
     override fun getCurrentLocation(): Location? {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             // Permissions not granted then return null
             return null
         }
 
-        val locationManager = ContextCompat.getSystemService(context, LocationManager::class.java) ?: return null
+        val locationManager =
+            ContextCompat.getSystemService(context, LocationManager::class.java) ?: return null
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
@@ -79,13 +87,21 @@ class NetworkRepository(val context: Context): NetworkRepositoryContract {
     }
 
     override fun requestLocationUpdates(locationCallback: (Location) -> Unit) {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             // Permissions not granted then don't return anything
             return
         }
 
-        val locationManager = ContextCompat.getSystemService(context, LocationManager::class.java) ?: return
+        val locationManager =
+            ContextCompat.getSystemService(context, LocationManager::class.java) ?: return
         val locationListener = android.location.LocationListener { location ->
             locationCallback(location)
         }
@@ -102,5 +118,10 @@ class NetworkRepository(val context: Context): NetworkRepositoryContract {
             10f, // 10 meters
             locationListener
         )
+    }
+
+    companion object {
+        val NETWORK_TYPE_WLAN = "wlan"
+        val NETWORK_TYPE_WIFI = "wifi"
     }
 }

@@ -4,13 +4,14 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import androidx.core.content.FileProvider
+import com.privorotest.deviceinformation.NetworkViewModel.Companion.CSV_FILE_NAME
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 
-object FileUtils: FileUtilsContract {
+object FileUtils : FileUtilsContract {
     override fun writeDataToCsv(context: Context, data: String, overwrite: Boolean) {
-        val fileName = "network_data.csv"
+        val fileName = CSV_FILE_NAME
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
 
         try {
@@ -25,7 +26,7 @@ object FileUtils: FileUtilsContract {
     }
 
     override fun getCsvFileUri(context: Context): Uri {
-        val fileName = "network_data.csv"
+        val fileName = CSV_FILE_NAME
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
         return FileProvider.getUriForFile(
             context,
@@ -36,7 +37,7 @@ object FileUtils: FileUtilsContract {
 
     // New method to get the CSV file
     override fun getCsvFile(context: Context): File? {
-        val fileName = "network_data.csv"
+        val fileName = CSV_FILE_NAME
         return File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
     }
 }
