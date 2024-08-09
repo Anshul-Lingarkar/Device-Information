@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Device Information</string>
+    <string name="ip_default">Disconnected</string>
+    <string name="location_default">Location Unavailable</string>
+    <string name="datetime_format">Local: %1$s\n(UTC: %2$s)</string>
+    <string name="location_format">Lat: %1$.6f\nLong: %2$.6f</string>
+</resources>
