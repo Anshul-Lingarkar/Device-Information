@@ -22,13 +22,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
+import com.privorotest.deviceinformation.model.NetworkData
 import com.privorotest.deviceinformation.utils.FileUtils
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), BaseApplicationContract.ViewContract {
 
     private lateinit var ipTextView: TextView
     private lateinit var locationTextView: TextView

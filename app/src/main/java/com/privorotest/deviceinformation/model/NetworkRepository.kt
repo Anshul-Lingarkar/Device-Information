@@ -15,9 +15,9 @@ import java.net.NetworkInterface
 import java.net.URL
 import java.util.*
 
-class NetworkRepository(val context: Context) {
+class NetworkRepository(val context: Context): NetworkRepositoryContract {
 
-    fun getWifiIpAddress(): String? {
+    override fun getWifiIpAddress(): String? {
         try {
             val interfaces: Enumeration<NetworkInterface> = NetworkInterface.getNetworkInterfaces()
             for (intf in interfaces) {
@@ -36,7 +36,7 @@ class NetworkRepository(val context: Context) {
         return null
     }
 
-    suspend fun getPublicIpAddress(): String? {
+    override suspend fun getPublicIpAddress(): String? {
         return withContext(Dispatchers.IO) {
             try {
                 val response = readTextFromUrl("https://api.ipify.org?format=text")
@@ -48,11 +48,11 @@ class NetworkRepository(val context: Context) {
         }
     }
 
-    fun readTextFromUrl(urlString: String): String {
+    override fun readTextFromUrl(urlString: String): String {
         return URL(urlString).readText()
     }
 
-    fun getCurrentLocation(): Location? {
+    override fun getCurrentLocation(): Location? {
         val locationManager = ContextCompat.getSystemService(context, LocationManager::class.java) ?: return null
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
@@ -71,7 +71,7 @@ class NetworkRepository(val context: Context) {
         return null
     }
 
-    fun requestLocationUpdates(locationCallback: (Location) -> Unit) {
+    override fun requestLocationUpdates(locationCallback: (Location) -> Unit) {
         val locationManager = ContextCompat.getSystemService(context, LocationManager::class.java) ?: return
         val locationListener = android.location.LocationListener { location ->
             locationCallback(location)

@@ -18,7 +18,8 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-class NetworkViewModel(application: Application) : AndroidViewModel(application) {
+class NetworkViewModel(application: Application) : AndroidViewModel(application),
+    BaseApplicationContract.ViewModelContract {
 
     private val _networkData = MutableLiveData<NetworkData>()
     val networkData: LiveData<NetworkData> get() = _networkData
@@ -45,7 +46,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
         requestLocationUpdates()
     }
 
-    fun updateNetworkData() {
+    override fun updateNetworkData() {
         viewModelScope.launch {
             val ipAddress = getIpAddress()
             val location = networkRepository.getCurrentLocation()
@@ -57,7 +58,18 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private suspend fun getIpAddress(): String? {
+    override fun requestLocationUpdates() {
+        networkRepository.requestLocationUpdates { location ->
+            val currentNetworkData = _networkData.value
+            val updatedNetworkData = currentNetworkData?.copy(location = location)
+            updatedNetworkData?.let {
+                _networkData.postValue(it)
+                appendDataToCsv(it) // Append data to CSV when location is updated
+            }
+        }
+    }
+
+    suspend fun getIpAddress(): String? {
         val connectivityManager = getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connectivityManager.activeNetwork
         val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
@@ -101,17 +113,6 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
         val updatedNetworkData = currentNetworkData?.copy(localTime = localTime, utcTime = utcTime)
         updatedNetworkData?.let {
             _networkData.postValue(it)
-        }
-    }
-
-    private fun requestLocationUpdates() {
-        networkRepository.requestLocationUpdates { location ->
-            val currentNetworkData = _networkData.value
-            val updatedNetworkData = currentNetworkData?.copy(location = location)
-            updatedNetworkData?.let {
-                _networkData.postValue(it)
-                appendDataToCsv(it) // Append data to CSV when location is updated
-            }
         }
     }
 

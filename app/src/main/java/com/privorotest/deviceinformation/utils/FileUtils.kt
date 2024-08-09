@@ -8,8 +8,8 @@ import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 
-object FileUtils {
-    fun writeDataToCsv(context: Context, data: String, overwrite: Boolean = false) {
+object FileUtils: FileUtilsContract {
+    override fun writeDataToCsv(context: Context, data: String, overwrite: Boolean) {
         val fileName = "network_data.csv"
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
 
@@ -24,7 +24,7 @@ object FileUtils {
         }
     }
 
-    fun getCsvFileUri(context: Context): Uri {
+    override fun getCsvFileUri(context: Context): Uri {
         val fileName = "network_data.csv"
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
         return FileProvider.getUriForFile(
@@ -35,7 +35,7 @@ object FileUtils {
     }
 
     // New method to get the CSV file
-    fun getCsvFile(context: Context): File? {
+    override fun getCsvFile(context: Context): File? {
         val fileName = "network_data.csv"
         return File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
     }
