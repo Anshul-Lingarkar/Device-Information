@@ -24,7 +24,6 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
     val networkData: LiveData<NetworkData> get() = _networkData
     private val handler = Handler(Looper.getMainLooper())
 
-    //The Dependency Injection is not working
     var networkRepository = NetworkRepository(application)
 
     init {
@@ -44,7 +43,6 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
         updateNetworkData()
         startTimer()
         requestLocationUpdates()
-        startCsvWritingTask()
     }
 
     fun updateNetworkData() {
@@ -55,6 +53,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
             val utcTime = getCurrentTimeInTimeZone("UTC")
             val networkData = NetworkData(ipAddress, location, localTime, utcTime)
             _networkData.postValue(networkData)
+            appendDataToCsv(networkData)  // Append data to CSV when data is updated
         }
     }
 
@@ -100,43 +99,25 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
         val utcTime = getCurrentTimeInTimeZone("UTC")
         val currentNetworkData = _networkData.value
         val updatedNetworkData = currentNetworkData?.copy(localTime = localTime, utcTime = utcTime)
-        _networkData.postValue(updatedNetworkData!!)
+        updatedNetworkData?.let {
+            _networkData.postValue(it)
+        }
     }
 
     private fun requestLocationUpdates() {
         networkRepository.requestLocationUpdates { location ->
             val currentNetworkData = _networkData.value
             val updatedNetworkData = currentNetworkData?.copy(location = location)
-            _networkData.postValue(updatedNetworkData!!)
-        }
-    }
-
-    private fun startCsvWritingTask() {
-        handler.postDelayed(object : Runnable {
-            override fun run() {
-                appendDataToCsv()
-                handler.postDelayed(this, 60 * 1000) // Every 1 minute
-            }
-        }, 60 * 1000)
-    }
-
-    private fun appendDataToCsv() {
-        val currentNetworkData = _networkData.value
-        currentNetworkData?.let {
-            val data = "${it.ipAddress ?: "N/A"}, ${it.location?.latitude ?: "N/A"}, ${it.location?.longitude ?: "N/A"}, ${it.localTime}, ${it.utcTime}"
-            FileUtils.writeDataToCsv(getApplication(), data)
-        }
-    }
-
-    fun downloadCsvFile(overwrite: Boolean = true) {
-        viewModelScope.launch {
-            // Collect the latest data
-            val currentNetworkData = _networkData.value
-            currentNetworkData?.let {
-                val data = "${it.ipAddress ?: "N/A"}, ${it.location?.latitude ?: "N/A"}, ${it.location?.longitude ?: "N/A"}, ${it.localTime}, ${it.utcTime}"
-                FileUtils.writeDataToCsv(getApplication(), data, overwrite)
+            updatedNetworkData?.let {
+                _networkData.postValue(it)
+                appendDataToCsv(it) // Append data to CSV when location is updated
             }
         }
+    }
+
+    private fun appendDataToCsv(networkData: NetworkData) {
+        val data = "${networkData.ipAddress ?: "N/A"},${networkData.location?.latitude ?: "N/A"},${networkData.location?.longitude ?: "N/A"},${networkData.localTime},${networkData.utcTime}"
+        FileUtils.writeDataToCsv(getApplication(), data)
     }
 }
 

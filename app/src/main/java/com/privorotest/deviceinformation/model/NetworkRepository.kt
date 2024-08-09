@@ -1,8 +1,11 @@
 package com.privorotest.deviceinformation.model
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -73,7 +76,6 @@ class NetworkRepository(val context: Context) {
         val locationListener = android.location.LocationListener { location ->
             locationCallback(location)
         }
-
         locationManager.requestLocationUpdates(
             LocationManager.GPS_PROVIDER,
             10000L, // 10 seconds

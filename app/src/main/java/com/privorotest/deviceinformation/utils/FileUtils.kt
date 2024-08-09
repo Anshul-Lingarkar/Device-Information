@@ -14,11 +14,7 @@ object FileUtils {
         val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
 
         try {
-            val fileWriter = FileWriter(file, !overwrite) // Append mode if not overwriting
-            if (overwrite || !file.exists()) {
-                // Write the header if overwriting or if the file is new
-                fileWriter.write("IP Address, Latitude, Longitude, Local Time, UTC Time\n")
-            }
+            val fileWriter = FileWriter(file, !overwrite)
             fileWriter.append(data)
             fileWriter.append("\n")
             fileWriter.flush()

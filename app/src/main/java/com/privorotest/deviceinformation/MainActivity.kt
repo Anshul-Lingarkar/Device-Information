@@ -1,8 +1,11 @@
 package com.privorotest.deviceinformation
 
 import android.Manifest
+import android.app.DownloadManager
 import android.content.ContentUris
 import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -17,9 +20,13 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
 import com.privorotest.deviceinformation.utils.FileUtils
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,8 +56,45 @@ class MainActivity : AppCompatActivity() {
         })
 
         downloadButton.setOnClickListener {
-            // Call the ViewModel method to download or overwrite the CSV file
-            downloadCsvFile()
+            /*val csvFileUri = FileUtils.getCsvFileUri(this)
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, csvFileUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            // Explicitly grant URI permissions to all relevant apps
+            val resolvedIntentActivities = packageManager.queryIntentActivities(shareIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            resolvedIntentActivities.forEach { resolvedInfo ->
+                val packageName = resolvedInfo.activityInfo.packageName
+                grantUriPermission(packageName, csvFileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            try {
+                startActivity(Intent.createChooser(shareIntent, "Share CSV File"))
+            } catch (e: Exception) {
+                Toast.makeText(this, "No app available to share the file.", Toast.LENGTH_SHORT).show()
+            }*/
+            val csvFile = FileUtils.getCsvFile(this)
+            if (csvFile == null || !csvFile.exists() || csvFile.length() == 0L) {
+                Toast.makeText(this, "CSV file is empty or doesn't exist.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val csvFileUri = FileUtils.getCsvFileUri(this)
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, csvFileUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            try {
+                startActivity(Intent.createChooser(shareIntent, "Share CSV File"))
+            } catch (e: Exception) {
+                Toast.makeText(this, "No app available to share the file.", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -64,196 +108,6 @@ class MainActivity : AppCompatActivity() {
 
         if (permissions.isNotEmpty()) {
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_CODE_PERMISSIONS)
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            for (i in permissions.indices) {
-                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "${permissions[i]} permission not granted", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    /*      WORKING FOR FIRST TIME DOWNLOAD
-    private fun downloadCsvFile() {
-        val file = FileUtils.getCsvFile(this)
-
-        if (file != null) {
-
-            if (!file.exists()) {
-                file.createNewFile()
-                // Optionally, write some default data to file if necessary
-                file.writeText("IP Address, Latitude, Longitude, Local Time, UTC Time\n")
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val values = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                }
-
-                val contentUri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)?.also { uri ->
-                    contentResolver.openOutputStream(uri)?.use { outputStream ->
-                        file.inputStream().use { inputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
-                    }
-                }
-
-                if (contentUri != null) {
-                    Toast.makeText(this, "CSV file downloaded", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Failed to download file", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                val destFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), file.name)
-
-                if (destFile.exists()) {
-                    destFile.delete() // Delete the existing file
-                }
-
-                file.copyTo(destFile)
-                Toast.makeText(this, "CSV file downloaded", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(this, "File not found", Toast.LENGTH_SHORT).show()
-        }
-    }*/
-
-    /*private fun downloadCsvFile() {
-        val file = FileUtils.getCsvFile(this)
-
-        if (file != null && file.exists()) {
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val values = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                }
-
-                // Query to check if the file already exists in the Downloads folder
-                val existingFileUri = contentResolver.query(
-                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.MediaColumns._ID),
-                    "${MediaStore.MediaColumns.DISPLAY_NAME}=?",
-                    arrayOf(file.name),
-                    null
-                )?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
-                        Uri.withAppendedPath(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id.toString())
-                    } else null
-                }
-
-                existingFileUri?.let { uri ->
-                    // If the file exists, delete it first
-                    contentResolver.delete(uri, null, null)
-                }
-
-                val contentUri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)?.also { uri ->
-                    contentResolver.openOutputStream(uri)?.use { outputStream ->
-                        file.inputStream().use { inputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
-                    }
-                }
-
-                if (contentUri != null) {
-                    Toast.makeText(this, "CSV file downloaded", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Failed to download file", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                val destFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), file.name)
-
-                if (destFile.exists()) {
-                    destFile.delete() // Delete the existing file
-                }
-
-                file.copyTo(destFile)
-                Toast.makeText(this, "CSV file downloaded", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(this, "File not found", Toast.LENGTH_SHORT).show()
-        }
-    }*/
-
-    private fun downloadCsvFile() {
-        val file = FileUtils.getCsvFile(this)
-
-        if (file != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // For Android Q (API 29) and above
-                val values = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                }
-
-                // Check if the file already exists in MediaStore
-                val queryUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI
-                val projection = arrayOf(MediaStore.MediaColumns._ID)
-                val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ?"
-                val selectionArgs = arrayOf(file.name)
-
-                val cursor = contentResolver.query(queryUri, projection, selection, selectionArgs, null)
-                val existingId = cursor?.use {
-                    if (it.moveToFirst()) {
-                        it.getLong(it.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
-                    } else {
-                        null
-                    }
-                }
-
-                if (existingId != null) {
-                    // File already exists, so we need to update it
-                    val updateUri = ContentUris.withAppendedId(queryUri, existingId)
-                    contentResolver.openOutputStream(updateUri)?.use { outputStream ->
-                        file.inputStream().use { inputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
-                    }
-                    Toast.makeText(this, "CSV file updated", Toast.LENGTH_SHORT).show()
-                } else {
-                    // File does not exist, so we need to insert it
-                    val contentUri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)?.also { uri ->
-                        contentResolver.openOutputStream(uri)?.use { outputStream ->
-                            file.inputStream().use { inputStream ->
-                                inputStream.copyTo(outputStream)
-                            }
-                        }
-                    }
-
-                    if (contentUri != null) {
-                        Toast.makeText(this, "CSV file downloaded", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, "Failed to download file", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } else {
-                // For Android versions below Q
-                val destFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), file.name)
-
-                if (destFile.exists()) {
-                    destFile.delete() // Delete the existing file
-                }
-
-                // Copy the file to the Downloads directory
-                file.copyTo(destFile)
-                Toast.makeText(this, "CSV file downloaded", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(this, "File not found", Toast.LENGTH_SHORT).show()
         }
     }
 }
