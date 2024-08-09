@@ -124,14 +124,14 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
 
     private fun appendDataToCsv(networkData: NetworkData) {
         val data =
-            "${networkData.ipAddress ?: "Not Available"},${networkData.location?.latitude ?: "Not Available"},${networkData.location?.longitude ?: "N/A"},${networkData.localTime},${networkData.utcTime}"
+            "${networkData.ipAddress ?: "Not Available"},${networkData.location?.latitude ?: "Not Available"},${networkData.location?.longitude ?: "Not Available"},${networkData.localTime},${networkData.utcTime}"
         FileUtils.writeDataToCsv(getApplication(), data)
     }
 
     companion object {
-        val TIME_FORMAT = "MM:dd:yyyy HH:mm:ss"
-        val UTC_TIME_ZONE = "UTC"
-        val CSV_FILE_NAME = "network_data.csv"
+        const val TIME_FORMAT = "MM:dd:yyyy HH:mm:ss"
+        const val UTC_TIME_ZONE = "UTC"
+        const val CSV_FILE_NAME = "network_data.csv"
     }
 }
 
