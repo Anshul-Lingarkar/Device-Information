@@ -1,6 +1,7 @@
 package com.privorotest.deviceinformation.model
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -53,6 +54,12 @@ class NetworkRepository(val context: Context): NetworkRepositoryContract {
     }
 
     override fun getCurrentLocation(): Location? {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Permissions not granted then return null
+            return null
+        }
+
         val locationManager = ContextCompat.getSystemService(context, LocationManager::class.java) ?: return null
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
@@ -72,6 +79,12 @@ class NetworkRepository(val context: Context): NetworkRepositoryContract {
     }
 
     override fun requestLocationUpdates(locationCallback: (Location) -> Unit) {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Permissions not granted then don't return anything
+            return
+        }
+
         val locationManager = ContextCompat.getSystemService(context, LocationManager::class.java) ?: return
         val locationListener = android.location.LocationListener { location ->
             locationCallback(location)

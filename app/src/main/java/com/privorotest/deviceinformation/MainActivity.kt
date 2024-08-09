@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.support.annotation.RequiresApi
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -22,6 +23,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
+import com.google.android.material.snackbar.Snackbar
 import com.privorotest.deviceinformation.model.NetworkData
 import com.privorotest.deviceinformation.utils.FileUtils
 import java.io.File
@@ -57,26 +59,6 @@ class MainActivity : AppCompatActivity(), BaseApplicationContract.ViewContract {
         })
 
         downloadButton.setOnClickListener {
-            /*val csvFileUri = FileUtils.getCsvFileUri(this)
-
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/csv"
-                putExtra(Intent.EXTRA_STREAM, csvFileUri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            // Explicitly grant URI permissions to all relevant apps
-            val resolvedIntentActivities = packageManager.queryIntentActivities(shareIntent, PackageManager.MATCH_DEFAULT_ONLY)
-            resolvedIntentActivities.forEach { resolvedInfo ->
-                val packageName = resolvedInfo.activityInfo.packageName
-                grantUriPermission(packageName, csvFileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            try {
-                startActivity(Intent.createChooser(shareIntent, "Share CSV File"))
-            } catch (e: Exception) {
-                Toast.makeText(this, "No app available to share the file.", Toast.LENGTH_SHORT).show()
-            }*/
             val csvFile = FileUtils.getCsvFile(this)
             if (csvFile == null || !csvFile.exists() || csvFile.length() == 0L) {
                 Toast.makeText(this, "CSV file is empty or doesn't exist.", Toast.LENGTH_SHORT).show()
@@ -109,6 +91,23 @@ class MainActivity : AppCompatActivity(), BaseApplicationContract.ViewContract {
 
         if (permissions.isNotEmpty()) {
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_CODE_PERMISSIONS)
+        }
+    }
+
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            for (i in permissions.indices) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED && permissions[i] == Manifest.permission.ACCESS_FINE_LOCATION) {
+                    val rootView = findViewById<View>(android.R.id.content)
+                    Snackbar.make(rootView, "Device Location permission has not been granted", Snackbar.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }
