@@ -3,24 +3,24 @@ package com.privorotest.deviceinformation.model
 import android.content.Context
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.*
 import org.mockito.kotlin.argumentCaptor
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.*
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [Build.VERSION_CODES.O])
 class NetworkRepositoryTest {
 
     private lateinit var context: Context
