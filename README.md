@@ -21,4 +21,4 @@
 ## General Note
 
 - This application has been tested on Samsung Galaxy F62 and OnePlus Nord N20.
-- There are some issues when running the app on Emulator, so please test the application on Android Device.
+- This application can also be tested on Emulator.
