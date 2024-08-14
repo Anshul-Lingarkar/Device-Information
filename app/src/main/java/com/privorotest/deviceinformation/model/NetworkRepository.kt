@@ -121,7 +121,7 @@ class NetworkRepository(val context: Context) : NetworkRepositoryContract {
     }
 
     companion object {
-        val NETWORK_TYPE_WLAN = "wlan"
-        val NETWORK_TYPE_WIFI = "wifi"
+        const val NETWORK_TYPE_WLAN = "wlan"
+        const val NETWORK_TYPE_WIFI = "wifi"
     }
 }
