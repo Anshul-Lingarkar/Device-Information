@@ -72,6 +72,24 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private val _shareFileEvent = MutableLiveData<String?>()
+    val shareFileEvent: LiveData<String?> get() = _shareFileEvent
+
+    override fun onDownloadButtonClicked() {
+        val csvFile = FileUtils.getCsvFile(getApplication<Application>())
+        if (csvFile == null || !csvFile.exists() || csvFile.length() == 0L) {
+            _shareFileEvent.value = null // No file to share
+        } else {
+            val csvFileUri = FileUtils.getCsvFileUri(getApplication<Application>())
+            _shareFileEvent.value = csvFileUri.toString() // File URI to share
+        }
+    }
+
+    // Reset the event after it has been handled
+    fun resetShareFileEvent() {
+        _shareFileEvent.value = null
+    }
+
     suspend fun getIpAddress(): String? {
         val connectivityManager =
             getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

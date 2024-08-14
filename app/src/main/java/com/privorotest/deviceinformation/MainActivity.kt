@@ -3,6 +3,7 @@ package com.privorotest.deviceinformation
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -43,7 +44,7 @@ class MainActivity : AppCompatActivity(), BaseApplicationContract.ViewContract {
             setupUI()
         }
         downloadButton.setOnClickListener {
-            val csvFile = FileUtils.getCsvFile(this)
+            /*val csvFile = FileUtils.getCsvFile(this)
             if (csvFile == null || !csvFile.exists() || csvFile.length() == 0L) {
                 Toast.makeText(
                     this,
@@ -68,7 +69,41 @@ class MainActivity : AppCompatActivity(), BaseApplicationContract.ViewContract {
             } catch (e: Exception) {
                 Toast.makeText(this, getString(R.string.csv_file_share_error), Toast.LENGTH_SHORT)
                     .show()
+            }*/
+            networkViewModel.onDownloadButtonClicked()
+        }
+
+        networkViewModel.shareFileEvent.observe(this, Observer { fileUriString ->
+            fileUriString?.let { uriString ->
+                shareFile(Uri.parse(uriString))
+            } ?: run {
+                Toast.makeText(
+                    this,
+                    getString(R.string.csv_file_generation_error),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+
+            // Reset the event
+            networkViewModel.resetShareFileEvent()
+        })
+    }
+
+    private fun shareFile(fileUri: Uri) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_STREAM, fileUri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        try {
+            startActivity(
+                Intent.createChooser(
+                    shareIntent,
+                    getString(R.string.csv_file_share_screen_title)
+                )
+            )
+        } catch (e: Exception) {
+            Toast.makeText(this, getString(R.string.csv_file_share_error), Toast.LENGTH_SHORT).show()
         }
     }
 
