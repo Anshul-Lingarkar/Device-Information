@@ -22,8 +22,6 @@ class MainActivity : AppCompatActivity(), BaseApplicationContract.ViewContract {
     private lateinit var locationTextView: TextView
     private lateinit var datetimeTextView: TextView
     private lateinit var downloadButton: Button
-    private val REQUEST_CODE_PERMISSIONS = 101
-    private val FILE_TYPE = "text/csv"
     private val networkViewModel: NetworkViewModel by viewModels()
     private var permissionsGranted = false
 
@@ -129,5 +127,10 @@ class MainActivity : AppCompatActivity(), BaseApplicationContract.ViewContract {
             permissionsGranted = true
             setupUI()
         }
+    }
+
+    companion object {
+        const val FILE_TYPE = "text/csv"
+        const val REQUEST_CODE_PERMISSIONS = 101
     }
 }
