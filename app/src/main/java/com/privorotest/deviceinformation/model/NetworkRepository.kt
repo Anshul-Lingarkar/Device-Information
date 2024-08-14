@@ -1,7 +1,6 @@
 package com.privorotest.deviceinformation.model
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -14,9 +13,9 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.URL
-import java.util.*
+import java.util.Enumeration
 
-class NetworkRepository(val context: Context) : NetworkRepositoryContract {
+class NetworkRepository(private val context: Context) : NetworkRepositoryContract {
 
     override fun getWifiIpAddress(): String? {
         try {
@@ -121,7 +120,7 @@ class NetworkRepository(val context: Context) : NetworkRepositoryContract {
     }
 
     companion object {
-        val NETWORK_TYPE_WLAN = "wlan"
-        val NETWORK_TYPE_WIFI = "wifi"
+        const val NETWORK_TYPE_WLAN = "wlan"
+        const val NETWORK_TYPE_WIFI = "wifi"
     }
 }
